@@ -34,43 +34,64 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- MOTOR DE CLASSIFICAÇÃO TAXONÔMICA ---
+# --- MOTOR DE CLASSIFICAÇÃO TAXONÔMICA RECALIBRADO ---
 def classify_universal_taxonomy(tempo, centroid, rms):
-    if 125 <= tempo <= 160 and rms > 0.12:
+    # Reggae / Dub / Reggae Brasileiro (Andamento cadenciado 65-95 BPM, graves marcantes / centroide moderado-baixo)
+    if 65 <= tempo <= 98 and centroid < 1700 and rms < 0.13:
+        return "Reggae", "Roots Reggae / Dub / Reggae Brasileiro"
+        
+    # Funk Brasileiro (BPM mais alto ou batida muito densa/compressão pesada)
+    elif 125 <= tempo <= 160 and rms > 0.12:
         if tempo >= 145:
             return "Música Brasileira", "Funk Brasileiro -> Funk 150 BPM / Automotivo / Mandelão"
         elif centroid > 2100:
             return "Música Brasileira", "Funk Brasileiro -> Funk Carioca / Ostentação"
         else:
             return "Música Brasileira", "Funk Brasileiro -> Funk Consciente / Proibidão"
+            
+    # Música Eletrônica / EDM
     elif 120 <= tempo <= 140 and centroid > 2200:
         return "Música Eletrônica (EDM)", "House / Tech House / Progressive House"
     elif tempo > 140 and centroid > 2000:
         return "Música Eletrônica (EDM)", "Drum and Bass / Hardstyle / Psytrance"
     elif 70 <= tempo <= 100 and centroid > 2100:
         return "Música Eletrônica (EDM)", "Phonk / Trap EDM"
+
+    # Sertanejo & Piseiro
     elif 80 <= tempo <= 118 and centroid < 1700:
         if rms > 0.11:
             return "Música Brasileira", "Sertanejo -> Sertanejo Universitário / Piseiro"
         else:
             return "Música Brasileira", "Sertanejo -> Sertanejo Raiz / Modão"
+            
+    # Forró
     elif 115 <= tempo <= 145 and centroid < 1900:
         return "Música Brasileira", "Forró -> Forró Pé de Serra / Xote / Baião"
+        
+    # MPB / Bossa Nova
     elif tempo < 85 and centroid < 1500:
         return "Música Brasileira", "MPB -> Bossa Nova / MPB Contemporânea / Choro"
+
+    # Rock & Metal
     elif 95 <= tempo <= 160 and centroid > 1800:
         if rms > 0.13:
             return "Metal", "Heavy Metal / Metalcore / Thrash Metal"
         else:
             return "Rock", "Classic Rock / Alternative Rock / Grunge"
+
+    # Hip-Hop / Rap
     elif 70 <= tempo <= 105 and centroid > 1600:
         return "Hip-Hop / Rap", "Trap / Drill / Boom Bap / Lo-fi Hip-Hop"
+
+    # Jazz & Blues
     elif 60 <= tempo <= 95 and centroid < 1400:
         return "Jazz", "Smooth Jazz / Bebop / Delta Blues"
-    elif 65 <= tempo <= 90:
-        return "Reggae", "Roots Reggae / Dub / Dancehall"
+
+    # Clássica
     elif tempo < 75 and centroid < 1300:
         return "Música Clássica", "Sinfônica / Música de Câmara / Solo Piano"
+
+    # Padrão
     else:
         return "Pop", "Latin Pop / Synthpop / Contemporary R&B"
 
@@ -87,7 +108,7 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Enviar Arquivo (.mp3 / .wav)", type=["mp3", "wav"])
     st.markdown("---")
     st.markdown("### Matriz Coberta")
-    st.markdown("<small style='color: #9ca3af;'>✓ Clássica, Ópera & Coral<br>✓ Rock, Metal & Vertentes<br>✓ Pop, K-J-C Pop & Hyperpop<br>✓ EDM, Phonk, Trap & Dubstep<br>✓ Hip-Hop, Drill & Lo-fi<br>✓ Jazz, Blues, Soul & R&B<br>✓ Reggae, Dub & Dancehall<br>✓ Gospel & Música Latina<br>✓ **Brasileira (Funk, Sertanejo, Forró, MPB, Bossa, etc.)**<br>✓ Africana, Indiana & Asiática<br>✓ Instrumental & Trilhas</small>", unsafe_allow_html=True)
+    st.markdown("<small style='color: #9ca3af;'>✓ Reggae, Dub & Reggae Brasileiro<br>✓ Funk (Carioca, 150 BPM, etc.)<br>✓ Sertanejo, Piseiro & Forró<br>✓ Rock, Metal & Vertentes<br>✓ EDM, Phonk, Trap & Dubstep<br>✓ Hip-Hop, Drill & Lo-fi<br>✓ Jazz, Blues, Soul & R&B<br>✓ Gospel & Música Latina<br>✓ MPB, Bossa Nova & Axé<br>✓ Africana, Indiana & Asiática</small>", unsafe_allow_html=True)
 
 # --- PROCESSAMENTO PRINCIPAL ---
 if uploaded_file is not None:
@@ -106,10 +127,7 @@ if uploaded_file is not None:
                 tmp_file_path = tmp_file.name
 
             try:
-                # Tratamento de erro seguro caso o MP3 esteja corrompido
                 y, sr = librosa.load(tmp_file_path, sr=None)
-                
-                # Extração DSP
                 tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
                 if isinstance(tempo, np.ndarray):
                     tempo = tempo[0]
