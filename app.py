@@ -34,14 +34,15 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- MOTOR DE CLASSIFICAÇÃO TAXONÔMICA RECALIBRADO ---
+# --- MOTOR DE CLASSIFICAÇÃO TAXONÔMICA BLINDADO ---
 def classify_universal_taxonomy(tempo, centroid, rms):
-    # Reggae / Dub / Reggae Brasileiro (Andamento cadenciado 65-95 BPM, graves marcantes / centroide moderado-baixo)
-    if 65 <= tempo <= 98 and centroid < 1700 and rms < 0.13:
+    # Correção prioritária: Reggae / Dub / Reggae Brasileiro (mesmo se o BPM dobrar na estimativa DSP, avaliamos o perfil de energia e brilho)
+    if (65 <= tempo <= 145) and (centroid < 1850) and (rms < 0.14):
+        # Se o BPM capturado estiver dobrado (ex: ~130-140), o DNA real continua sendo Reggae/Dub
         return "Reggae", "Roots Reggae / Dub / Reggae Brasileiro"
         
-    # Funk Brasileiro (BPM mais alto ou batida muito densa/compressão pesada)
-    elif 125 <= tempo <= 160 and rms > 0.12:
+    # Funk Brasileiro (exige densidade e brilho de agudos bem característicos)
+    elif 125 <= tempo <= 160 and rms > 0.12 and centroid > 1900:
         if tempo >= 145:
             return "Música Brasileira", "Funk Brasileiro -> Funk 150 BPM / Automotivo / Mandelão"
         elif centroid > 2100:
