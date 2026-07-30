@@ -1,87 +1,185 @@
 import streamlit as st
+import numpy as np
 import librosa
 import librosa.display
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
+import tempfile
+import os
 
-# Configuração da Página
+# --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
-    page_title="Studio 11 | Sound Intelligence MVP",
-    page_icon="🎵",
-    layout="wide"
+    page_title="Studio 11 | Sound Intelligence",
+    page_icon="🎛️",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Estilização visual minimalista
-st.title("🎧 Studio 11 — Sound Intelligence")
-st.markdown("### Extração de DNA Musical e Explicabilidade de IA para Engenharia de Som")
+# --- ESTILIZAÇÃO CSS CUSTOMIZADA (DARK THEME CORPORATIVO) ---
+st.markdown("""
+    <style>
+    /* Fundo principal e fontes */
+    .main {
+        background-color: #0b0f19;
+        color: #f3f4f6;
+    }
+    .sidebar .sidebar-content {
+        background-color: #111827;
+    }
+    /* Estilização de títulos */
+    h1, h2, h3 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        color: #ffffff;
+    }
+    /* Cards de métricas modernos */
+    .metric-card {
+        background-color: #1f2937;
+        border: 1px solid #374151;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    .metric-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #38bdf8;
+    }
+    .metric-label {
+        font-size: 14px;
+        color: #9ca3af;
+        margin-top: 5px;
+    }
+    /* Divisor estilizado */
+    hr {
+        border-color: #374151;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- CABEÇALHO DA MARCA ---
+st.markdown("<p style='color: #38bdf8; font-weight: 600; letter-spacing: 2px; font-size: 14px; margin-bottom: 0px;'>STUDIO 11 SOUND INTELLIGENCE</p>", unsafe_allow_html=True)
+st.title("Extração de DNA Musical & Insights DSP")
+st.markdown("<p style='color: #9ca3af; font-size: 16px;'>Plataforma B2B de inteligência de áudio para estúdios, gravadoras e curadores musicais.</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# Sidebar para instruções
+# --- BARRA LATERAL (CONTROLES E INPUTS) ---
 with st.sidebar:
-    st.header("Painel de Controle")
-    st.info("Fase: MVP Bootstrap (Zero-Cost)")
-    st.markdown("**Tecnologias:**")
-    st.markdown("- Python & FastAPI / Streamlit")
-    st.markdown("- Librosa (DSP)")
-    st.markdown("- Modelos CLAP & AST (IA)")
+    st.image("https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=300&auto=format&fit=crop", use_container_width=True)
+    st.markdown("### Configurações de Análise")
+    st.info("Envie um arquivo de áudio nos formatos suportados para iniciar o pipeline de extração de características acústicas.")
+    
+    uploaded_file = st.file_uploader("Arquivo de Áudio (.mp3 / .wav)", type=["mp3", "wav"])
+    
     st.markdown("---")
-    st.markdown("Desenvolvido por **Kelly Ortiz** & Wellington Marcondes")
+    st.markdown("### Sobre o Projeto")
+    st.markdown("<small style='color: #9ca3af;'><b>Tech Lead:</b> Kelly Ortiz<br><b>Parceiro:</b> Wellington Marcondes<br><b>Versão:</b> MVP 1.0 (DSP-First)</small>", unsafe_allow_html=True)
 
-# Upload do Arquivo de Áudio
-uploaded_file = st.file_uploader("Envie seu arquivo de áudio (MP3 ou WAV)", type=["mp3", "wav"])
-
+# --- CORPO PRINCIPAL DA APLICAÇÃO ---
 if uploaded_file is not None:
-    # Exibir player de áudio
-    st.audio(uploaded_file, format='audio/mp3')
+    # Layout em colunas para player e informações iniciais
+    col_player, col_info = st.columns([1.2, 1.8])
     
-    with st.spinner("Processando DSP e extraindo DNA Musical..."):
-        # Carregar o áudio com librosa
-        y, sr = librosa.load(uploaded_file, sr=None)
-        
-        # 1. Métricas Básicas de DSP
-        tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-        # Lidar com o retorno do tempo dependendo da versão do librosa
-        if isinstance(tempo, np.ndarray):
-            tempo = tempo[0]
+    with col_player:
+        st.markdown("### 🎧 Reprodução")
+        st.audio(uploaded_file, format='audio/mp3')
+        st.success(f"Arquivo carregado: **{uploaded_file.name}**")
+
+    with col_info:
+        st.markdown("### 📊 Status do Pipeline")
+        with st.spinner("Executando motor DSP e decompondo o DNA Musical..."):
+            # Salvamento seguro em arquivo temporário para evitar LibsndfileError
+            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp_file:
+                tmp_file.write(uploaded_file.getvalue())
+                tmp_file_path = tmp_file.name
+
+            try:
+                y, sr = librosa.load(tmp_file_path, sr=None)
+            finally:
+                if os.path.exists(tmp_file_path):
+                    os.remove(tmp_file_path)
             
-        duration = librosa.get_duration(y=y, sr=sr)
-        rms = np.mean(librosa.feature.rms(y=y))
-        spectral_centroid = np.mean(librosa.feature.spectral_centroid(y=y, sr=sr))
-
-    # Layout em colunas para os resultados
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.subheader("📊 Relatório Técnico (DSP)")
-        st.metric(label="BPM Estimado", value=f"{round(tempo, 1)}")
-        st.metric(label="Duração", value=f"{round(duration, 2)} segundos")
-        st.metric(label="Energia Média (RMS)", value=f"{round(float(rms), 4)}")
-        st.metric(label="Centroide Espectral (Brilho)", value=f"{round(float(spectral_centroid), 2)} Hz")
-
-    with col2:
-        st.subheader("🧬 DNA Musical (% de Estilos / Textura)")
-        # Simulação dos pesos percentuais retornados pelo modelo CLAP/AST
-        # Em produção, aqui entra a inferência real do modelo de IA
-        dna_data = pd.DataFrame({
-            'Atributo / Estilo': ['Eletrônica / Synth', 'Orgânico / Acústico', 'Densidade Harmônica', 'Dinâmica / Transientes', 'Presença de Vocais'],
-            'Porcentagem (%)': [68.5, 31.5, 82.0, 74.3, 45.0]
-        })
-        st.dataframe(dna_data, use_container_width=True)
+            # Extração de Métricas Reais via Librosa
+            tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
+            if isinstance(tempo, np.ndarray):
+                tempo = tempo[0]
+                
+            duration = librosa.get_duration(y=y, sr=sr)
+            rms = np.mean(librosa.feature.rms(y=y))
+            spectral_centroid = np.mean(librosa.feature.spectral_centroid(y=y, sr=sr))
+            
+        st.info("Processamento concluído com sucesso. Métricas extraídas do buffer de áudio bruto.")
 
     st.markdown("---")
-    st.subheader("📈 Análise Visual da Caixa-Preta (Espectrograma)")
+
+    # --- MÉTRICAS PRINCIPAIS (CARDS ESTILIZADOS) ---
+    st.markdown("### 🧬 Métricas de DNA Acústico")
     
-    # Gerando o gráfico do Espectrograma
-    fig, ax = plt.subplots(figsize=(10, 4))
+    m1, m2, m3, m4 = st.columns(4)
+    
+    with m1:
+        st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-value'>{tempo:.1f}</div>
+                <div class='metric-label'>BPM Estimado</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    with m2:
+        minutes = int(duration // 60)
+        seconds = int(duration % 60)
+        st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-value'>{minutes}:{seconds:02d}</div>
+                <div class='metric-label'>Duração Total</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    with m3:
+        st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-value'>{rms:.4f}</div>
+                <div class='metric-label'>Energia RMS Média</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    with m4:
+        st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-value'>{spectral_centroid:.0f} Hz</div>
+                <div class='metric-label'>Centroide Espectral</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # --- SEÇÃO DE VISUALIZAÇÕES E ESPECTROGRAMA ---
+    st.markdown("### 🔬 Espectrograma de Frequência")
+    st.markdown("<p style='color: #9ca3af;'>Representação visual em escala logarítmica da distribuição de energia ao longo do tempo.</p>", unsafe_allow_html=True)
+    
+    fig, ax = plt.subplots(figsize=(12, 4))
+    fig.patch.set_facecolor('#111827')
+    ax.set_facecolor('#0b0f19')
+    
     D = librosa.amplitude_to_db(np.abs(librosa.stft(y)), ref=np.max)
     img = librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='log', ax=ax, cmap='coolwarm')
-    ax.set(title='Espectrograma de Frequência - Mapeamento Studio 11')
-    fig.colorbar(img, ax=ax, format="%+2.f dB")
+    
+    ax.label_outer()
+    ax.tick_params(colors='#9ca3af', which='both')
+    ax.xaxis.label.set_color('#f3f4f6')
+    ax.yaxis.label.set_color('#f3f4f6')
+    
+    cbar = fig.colorbar(img, ax=ax, format='%+2.0f dB')
+    cbar.ax.yaxis.set_tick_params(color='#9ca3af')
+    plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color='#9ca3af')
     
     st.pyplot(fig)
 
-    st.success("Análise concluída com sucesso! Relatório pronto para validação com Design Partners.")
-
 else:
-    st.warning("Por favor, faça o upload de um arquivo de áudio para iniciar a análise.")
+    # Estado inicial (vazio)
+    st.markdown("""
+        <div style='text-align: center; padding: 50px; background-color: #111827; border-radius: 10px; border: 1px dashed #374151;'>
+            <h3 style='color: #9ca3af;'>Nenhum arquivo selecionado</h3>
+            <p style='color: #6b7280;'>Utilize a barra lateral à esquerda para enviar uma faixa de áudio e gerar os relatórios de inteligência.</p>
+        </div>
+    """, unsafe_allow_html=True)
