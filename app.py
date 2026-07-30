@@ -34,7 +34,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- MOTOR DE CLASSIFICAÇÃO COM VETOR DE DNA MULTIDIMENSIONAL (BLINDAGEM TOTAL REGGAE) ---
+# --- MOTOR DE CLASSIFICAÇÃO COM VETOR DE DNA MULTIDIMENSIONAL (ISOLAMENTO TOTAL) ---
 def classify_with_dna(tempo, centroid, rms):
     # Derivando métricas de DNA a partir do DSP extraído do áudio
     energia = int(min(100, max(5, rms * 600)))
@@ -57,10 +57,10 @@ def classify_with_dna(tempo, centroid, rms):
         "Atmosfera": atmosfera
     }
 
-    # 1. BLINDAGEM ABSOLUTA REGGAE (intercepta se o peso for leve e a agressividade for baixa, mesmo com BPM alto)
-    if peso < 55 and agressiv < 45 and harmonia > 50:
+    # 1. ISOLAMENTO ABSOLUTO DE REGGAE (Qualquer faixa com baixa agressividade e perfil rítmico cadenciado cai aqui direto)
+    if agressiv < 35 and peso < 60 and rms < 0.20:
         macro, sub = "Reggae", "Roots Reggae / Dub / Reggae Brasileiro"
-    # 2. Funk / Eletrônica pesada (exige alta agressividade e peso consistente)
+    # 2. Funk / Eletrônica pesada (exige pressão sonora e agressividade real de pista pesada)
     elif energia > 75 and agressiv > 55 and peso > 50:
         if tempo >= 145 or centroid > 2300:
             macro, sub = "Música Brasileira", "Funk Brasileiro -> Funk 150 BPM / Mandelão"
