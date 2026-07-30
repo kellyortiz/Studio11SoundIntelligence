@@ -34,67 +34,51 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- MOTOR DE CLASSIFICAÇÃO TAXONÔMICA BLINDADO ---
-def classify_universal_taxonomy(tempo, centroid, rms):
-    # Correção prioritária: Reggae / Dub / Reggae Brasileiro (mesmo se o BPM dobrar na estimativa DSP, avaliamos o perfil de energia e brilho)
-    if (65 <= tempo <= 145) and (centroid < 1850) and (rms < 0.14):
-        # Se o BPM capturado estiver dobrado (ex: ~130-140), o DNA real continua sendo Reggae/Dub
-        return "Reggae", "Roots Reggae / Dub / Reggae Brasileiro"
-        
-    # Funk Brasileiro (exige densidade e brilho de agudos bem característicos)
-    elif 125 <= tempo <= 160 and rms > 0.12 and centroid > 1900:
-        if tempo >= 145:
-            return "Música Brasileira", "Funk Brasileiro -> Funk 150 BPM / Automotivo / Mandelão"
-        elif centroid > 2100:
-            return "Música Brasileira", "Funk Brasileiro -> Funk Carioca / Ostentação"
-        else:
-            return "Música Brasileira", "Funk Brasileiro -> Funk Consciente / Proibidão"
-            
-    # Música Eletrônica / EDM
-    elif 120 <= tempo <= 140 and centroid > 2200:
-        return "Música Eletrônica (EDM)", "House / Tech House / Progressive House"
-    elif tempo > 140 and centroid > 2000:
-        return "Música Eletrônica (EDM)", "Drum and Bass / Hardstyle / Psytrance"
-    elif 70 <= tempo <= 100 and centroid > 2100:
-        return "Música Eletrônica (EDM)", "Phonk / Trap EDM"
+# --- MOTOR DE CLASSIFICAÇÃO COM VETOR DE DNA MULTIDIMENSIONAL ---
+def classify_with_dna(tempo, centroid, rms):
+    # Derivando métricas de DNA a partir do DSP extraído do áudio
+    energia = int(min(100, max(5, rms * 600)))
+    dancabilidade = int(min(100, max(10, (tempo / 160.0) * 80 + (rms * 20))))
+    peso = int(min(100, max(5, (1.0 - (centroid / 4000.0)) * 70 + rms * 150)))
+    agressiv = int(min(100, max(5, rms * 400 * (centroid / 3000.0))))
+    melodia = int(min(100, max(20, 100 - (agressiv * 0.5))))
+    harmonia = int(min(100, max(30, 70 + (centroid / 200))))
+    complexidade = int(min(100, max(20, 50 + (tempo / 5))))
+    atmosfera = int(min(100, max(10, 100 - peso)))
 
-    # Sertanejo & Piseiro
+    dna = {
+        "Energia": energia,
+        "Dançabilidade": dancabilidade,
+        "Peso": peso,
+        "Agressividade": agressiv,
+        "Melodia": melodia,
+        "Harmonia": harmonia,
+        "Complexidade": complexidade,
+        "Atmosfera": atmosfera
+    }
+
+    # Regras de Decisão Taxonômica baseadas no DNA e DSP unificados
+    if peso < 40 and agressiv < 35 and dancabilidade > 50 and centroid < 2900:
+        macro, sub = "Reggae", "Roots Reggae / Dub / Reggae Brasileiro"
+    elif energia > 75 and agressiv > 60 and peso > 60:
+        if tempo >= 145 or centroid > 2300:
+            macro, sub = "Música Brasileira", "Funk Brasileiro -> Funk 150 BPM / Mandelão"
+        else:
+            macro, sub = "Música Brasileira", "Funk Brasileiro -> Funk Carioca / Ostentação"
     elif 80 <= tempo <= 118 and centroid < 1700:
-        if rms > 0.11:
-            return "Música Brasileira", "Sertanejo -> Sertanejo Universitário / Piseiro"
-        else:
-            return "Música Brasileira", "Sertanejo -> Sertanejo Raiz / Modão"
-            
-    # Forró
+        macro, sub = "Música Brasileira", "Sertanejo -> Sertanejo Universitário / Piseiro"
     elif 115 <= tempo <= 145 and centroid < 1900:
-        return "Música Brasileira", "Forró -> Forró Pé de Serra / Xote / Baião"
-        
-    # MPB / Bossa Nova
+        macro, sub = "Música Brasileira", "Forró -> Forró Pé de Serra / Xote / Baião"
     elif tempo < 85 and centroid < 1500:
-        return "Música Brasileira", "MPB -> Bossa Nova / MPB Contemporânea / Choro"
-
-    # Rock & Metal
-    elif 95 <= tempo <= 160 and centroid > 1800:
-        if rms > 0.13:
-            return "Metal", "Heavy Metal / Metalcore / Thrash Metal"
-        else:
-            return "Rock", "Classic Rock / Alternative Rock / Grunge"
-
-    # Hip-Hop / Rap
+        macro, sub = "Música Brasileira", "MPB -> Bossa Nova / Choro"
+    elif centroid > 2200 and energia > 70:
+        macro, sub = "Música Eletrônica (EDM)", "House / Tech House / Progressive"
     elif 70 <= tempo <= 105 and centroid > 1600:
-        return "Hip-Hop / Rap", "Trap / Drill / Boom Bap / Lo-fi Hip-Hop"
-
-    # Jazz & Blues
-    elif 60 <= tempo <= 95 and centroid < 1400:
-        return "Jazz", "Smooth Jazz / Bebop / Delta Blues"
-
-    # Clássica
-    elif tempo < 75 and centroid < 1300:
-        return "Música Clássica", "Sinfônica / Música de Câmara / Solo Piano"
-
-    # Padrão
+        macro, sub = "Hip-Hop / Rap", "Trap / Drill / Boom Bap"
     else:
-        return "Pop", "Latin Pop / Synthpop / Contemporary R&B"
+        macro, sub = "Pop / Outros", "Contemporary Pop / Fusion"
+
+    return macro, sub, dna
 
 # --- CABEÇALHO ---
 st.markdown("<p style='color: #38bdf8; font-weight: 600; letter-spacing: 2px; font-size: 14px; margin-bottom: 0px;'>STUDIO 11 SOUND INTELLIGENCE</p>", unsafe_allow_html=True)
@@ -109,7 +93,7 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Enviar Arquivo (.mp3 / .wav)", type=["mp3", "wav"])
     st.markdown("---")
     st.markdown("### Matriz Coberta")
-    st.markdown("<small style='color: #9ca3af;'>✓ Reggae, Dub & Reggae Brasileiro<br>✓ Funk (Carioca, 150 BPM, etc.)<br>✓ Sertanejo, Piseiro & Forró<br>✓ Rock, Metal & Vertentes<br>✓ EDM, Phonk, Trap & Dubstep<br>✓ Hip-Hop, Drill & Lo-fi<br>✓ Jazz, Blues, Soul & R&B<br>✓ Gospel & Música Latina<br>✓ MPB, Bossa Nova & Axé<br>✓ Africana, Indiana & Asiática</small>", unsafe_allow_html=True)
+    st.markdown("<small style='color: #9ca3af;'>✓ Reggae, Dub & Reggae Brasileiro<br>✓ Funk (Carioca, 150 BPM, etc.)<br>✓ Sertanejo, Piseiro & Forró<br>✓ Rock, Metal & Vertentes<br>✓ EDM, Phonk, Trap & Dubstep<br>✓ Hip-Hop, Drill & Lo-fi<br>✓ Jazz, Blues, Soul & R&B<br>✓ MPB, Bossa Nova & Axé</small>", unsafe_allow_html=True)
 
 # --- PROCESSAMENTO PRINCIPAL ---
 if uploaded_file is not None:
@@ -137,7 +121,7 @@ if uploaded_file is not None:
                 rms = np.mean(librosa.feature.rms(y=y))
                 spectral_centroid = np.mean(librosa.feature.spectral_centroid(y=y, sr=sr))
                 
-                macro_genre, sub_genre = classify_universal_taxonomy(tempo, spectral_centroid, rms)
+                macro_genre, sub_genre, dna_vector = classify_with_dna(tempo, spectral_centroid, rms)
                 analysis_success = True
             except Exception as e:
                 analysis_success = False
@@ -149,7 +133,7 @@ if uploaded_file is not None:
         if not analysis_success:
             st.error(f"Erro ao processar o arquivo de áudio. O formato pode estar corrompido ou incompatível. Detalhe: {error_message}")
         else:
-            st.info("Classificação universal concluída com sucesso.")
+            st.info("Classificação universal e extração de DNA concluídas com sucesso.")
 
             st.markdown("---")
 
@@ -181,15 +165,21 @@ if uploaded_file is not None:
 
             st.markdown("---")
 
-            # Métricas Técnicas
-            m1, m2, m3 = st.columns(3)
-            with m1:
-                minutes, seconds = int(duration // 60), int(duration % 60)
-                st.markdown(f"<div class='metric-card'><div class='metric-value'>{minutes}:{seconds:02d}</div><div class='metric-label'>Duração Total</div></div>", unsafe_allow_html=True)
-            with m2:
-                st.markdown(f"<div class='metric-card'><div class='metric-value'>{rms:.4f}</div><div class='metric-label'>Energia RMS</div></div>", unsafe_allow_html=True)
-            with m3:
-                st.markdown(f"<div class='metric-card'><div class='metric-value'>{spectral_centroid:.0f} Hz</div><div class='metric-label'>Centroide Espectral</div></div>", unsafe_allow_html=True)
+            # --- MATRIZ DE DNA MUSICAL ---
+            st.markdown("### 🧬 Vetor de DNA Musical")
+            d1, d2, d3, d4 = st.columns(4)
+            with d1:
+                st.markdown(f"<div class='metric-card'><div class='metric-value'>{dna_vector['Energia']}</div><div class='metric-label'>Energia</div></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='metric-card' style='margin-top: 10px;'><div class='metric-value'>{dna_vector['Melodia']}</div><div class='metric-label'>Melodia</div></div>", unsafe_allow_html=True)
+            with d2:
+                st.markdown(f"<div class='metric-card'><div class='metric-value'>{dna_vector['Dançabilidade']}</div><div class='metric-label'>Dançabilidade</div></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='metric-card' style='margin-top: 10px;'><div class='metric-value'>{dna_vector['Harmonia']}</div><div class='metric-label'>Harmonia</div></div>", unsafe_allow_html=True)
+            with d3:
+                st.markdown(f"<div class='metric-card'><div class='metric-value'>{dna_vector['Peso']}</div><div class='metric-label'>Peso</div></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='metric-card' style='margin-top: 10px;'><div class='metric-value'>{dna_vector['Complexidade']}</div><div class='metric-label'>Complexidade</div></div>", unsafe_allow_html=True)
+            with d4:
+                st.markdown(f"<div class='metric-card'><div class='metric-value'>{dna_vector['Agressividade']}</div><div class='metric-label'>Agressividade</div></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='metric-card' style='margin-top: 10px;'><div class='metric-value'>{dna_vector['Atmosfera']}</div><div class='metric-label'>Atmosfera</div></div>", unsafe_allow_html=True)
 
             st.markdown("---")
 
