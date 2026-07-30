@@ -34,93 +34,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- DICIONÁRIO TAXONÔMICO UNIVERSAL COMPLETO (100% DA LISTA) ---
-TAXONOMY_DATABASE = {
-    "Música Clássica": [
-        "Medieval", "Renascentista", "Barroca", "Clássica", "Romântica", 
-        "Impressionista", "Contemporânea", "Ópera", "Música de Câmara", "Sinfônica", "Coral"
-    ],
-    "Rock": [
-        "Rock and Roll", "Classic Rock", "Hard Rock", "Soft Rock", "Alternative Rock", 
-        "Indie Rock", "Garage Rock", "Punk Rock", "Pop Punk", "Post-Punk", "Gothic Rock", 
-        "Progressive Rock", "Psychedelic Rock", "Southern Rock", "Folk Rock", "Blues Rock", 
-        "Glam Rock", "Grunge", "Surf Rock", "Math Rock", "Noise Rock", "Stoner Rock", 
-        "Shoegaze", "Emo", "Screamo"
-    ],
-    "Metal": [
-        "Heavy Metal", "Thrash Metal", "Death Metal", "Black Metal", "Doom Metal", 
-        "Power Metal", "Speed Metal", "Symphonic Metal", "Progressive Metal", "Nu Metal", 
-        "Groove Metal", "Metalcore", "Deathcore", "Folk Metal", "Viking Metal", 
-        "Industrial Metal", "Melodic Death Metal", "Djent"
-    ],
-    "Pop": [
-        "Dance Pop", "Synthpop", "Electropop", "Teen Pop", "Pop Rock", "Dream Pop", 
-        "Indie Pop", "Art Pop", "Hyperpop", "K-Pop", "J-Pop", "C-Pop", "Latin Pop"
-    ],
-    "Música Eletrônica (EDM)": [
-        "House (Deep, Progressive, Tech, Electro, Future, Tropical)",
-        "Techno (Minimal, Detroit, Acid)", "Trance (Progressive, Psytrance, Goa, Uplifting)",
-        "Drum and Bass", "Jungle", "Dubstep", "Brostep", "Future Bass", "Trap EDM", 
-        "Hardstyle", "Hardcore", "Gabber", "Happy Hardcore", "Electro", "Breakbeat", 
-        "Big Room", "UK Garage", "Bass House", "Lo-fi", "Ambient", "Chillout", 
-        "Downtempo", "IDM", "Glitch", "Vaporwave", "Synthwave", "Retrowave", "Phonk"
-    ],
-    "Hip-Hop / Rap": [
-        "Old School", "Boom Bap", "Gangsta Rap", "Trap", "Drill", "Conscious Rap", 
-        "Jazz Rap", "Alternative Hip-Hop", "Cloud Rap", "Horrorcore", "Mumble Rap", 
-        "G-Funk", "Lo-fi Hip-Hop", "Emo Rap"
-    ],
-    "Jazz": [
-        "Swing", "Bebop", "Hard Bop", "Cool Jazz", "Free Jazz", "Latin Jazz", 
-        "Smooth Jazz", "Jazz Fusion", "Modal Jazz", "Dixieland"
-    ],
-    "Blues": [
-        "Delta Blues", "Chicago Blues", "Electric Blues", "Country Blues", "Blues Rock", "Texas Blues"
-    ],
-    "Country & Folk": [
-        "Classic Country", "Country Pop", "Country Rock", "Bluegrass", "Honky Tonk", 
-        "Outlaw Country", "Americana", "Folk Tradicional", "Contemporary Folk", "Indie Folk", 
-        "Celtic Folk", "Neofolk"
-    ],
-    "Soul, Funk & R&B": [
-        "Soul", "Neo Soul", "Northern Soul", "Blue-Eyed Soul", "Funk", "P-Funk", 
-        "Funk Rock", "Funk Carioca (EUA)", "Electro Funk", "Contemporary R&B", "New Jack Swing", "Alternative R&B"
-    ],
-    "Reggae": [
-        "Roots Reggae", "Dancehall", "Dub", "Ska", "Rocksteady", "Lovers Rock"
-    ],
-    "Gospel": [
-        "Gospel Tradicional", "Contemporary Gospel", "Worship", "Praise", "Southern Gospel", "Black Gospel"
-    ],
-    "Música Latina": [
-        "Salsa", "Merengue", "Bachata", "Reggaeton", "Latin Trap", "Cumbia", 
-        "Tango", "Bolero", "Mariachi", "Flamenco"
-    ],
-    "Música Brasileira": [
-        "Samba (Enredo, Pagode, Partido Alto, Raiz, Rock)",
-        "MPB (Tradicional, Nova MPB)",
-        "Sertanejo (Raiz, Universitário, Pop)",
-        "Forró (Pé de Serra, Universitário, Eletrônico, Xote, Baião, Arrasta-pé)",
-        "Funk Brasileiro (Carioca, Ostentação, Consciente, Proibidão, Mandelão, 150 BPM, Automotivo)",
-        "Outros Brasileiros (Bossa Nova, Choro, Axé, Frevo, Maracatu, Carimbó, Tecnobrega, Pisadinha, Arrocha, Piseiro, Lambada, Vanerão, Chamamé)"
-    ],
-    "Música Africana & Global": [
-        "Afrobeat", "Afrobeats", "Highlife", "Amapiano", "Kwaito", "Gqom", "Soukous",
-        "Música Indiana (Carnática, Hindustani, Bhangra, Bollywood)",
-        "Música Asiática (Enka, City Pop, Cantopop, Mandopop, Trot, K-Indie, Visual Kei)"
-    ],
-    "Instrumental, Experimental & Mídia": [
-        "Instrumental (Orquestral, Fingerstyle, Solo Piano, Guitar Instrumental, New Age)",
-        "Experimental (Avant-garde, Noise, Drone, Musique Concrète, Minimalismo, Glitch)",
-        "Música para Mídia (Soundtrack, Cinematic, Game Music, Chiptune, 8-bit)"
-    ]
-}
-
+# --- MOTOR DE CLASSIFICAÇÃO TAXONÔMICA ---
 def classify_universal_taxonomy(tempo, centroid, rms):
-    """
-    Motor heurístico que mapeia as propriedades acústicas para o dicionário completo.
-    """
-    # 1. Funk Brasileiro / Eletrônica / Phonk
     if 125 <= tempo <= 160 and rms > 0.12:
         if tempo >= 145:
             return "Música Brasileira", "Funk Brasileiro -> Funk 150 BPM / Automotivo / Mandelão"
@@ -134,8 +49,6 @@ def classify_universal_taxonomy(tempo, centroid, rms):
         return "Música Eletrônica (EDM)", "Drum and Bass / Hardstyle / Psytrance"
     elif 70 <= tempo <= 100 and centroid > 2100:
         return "Música Eletrônica (EDM)", "Phonk / Trap EDM"
-
-    # 2. Sertanejo, Forró, Piseiro e MPB
     elif 80 <= tempo <= 118 and centroid < 1700:
         if rms > 0.11:
             return "Música Brasileira", "Sertanejo -> Sertanejo Universitário / Piseiro"
@@ -145,46 +58,36 @@ def classify_universal_taxonomy(tempo, centroid, rms):
         return "Música Brasileira", "Forró -> Forró Pé de Serra / Xote / Baião"
     elif tempo < 85 and centroid < 1500:
         return "Música Brasileira", "MPB -> Bossa Nova / MPB Contemporânea / Choro"
-
-    # 3. Rock & Metal
     elif 95 <= tempo <= 160 and centroid > 1800:
         if rms > 0.13:
             return "Metal", "Heavy Metal / Metalcore / Thrash Metal"
         else:
             return "Rock", "Classic Rock / Alternative Rock / Grunge"
-
-    # 4. Hip-Hop / Rap / R&B
     elif 70 <= tempo <= 105 and centroid > 1600:
         return "Hip-Hop / Rap", "Trap / Drill / Boom Bap / Lo-fi Hip-Hop"
-
-    # 5. Jazz, Blues & Reggae
     elif 60 <= tempo <= 95 and centroid < 1400:
         return "Jazz", "Smooth Jazz / Bebop / Delta Blues"
     elif 65 <= tempo <= 90:
         return "Reggae", "Roots Reggae / Dub / Dancehall"
-
-    # 6. Clássica / Instrumental
     elif tempo < 75 and centroid < 1300:
         return "Música Clássica", "Sinfônica / Música de Câmara / Solo Piano"
-
-    # Padrão Genérico Abrangente
     else:
         return "Pop", "Latin Pop / Synthpop / Contemporary R&B"
 
 # --- CABEÇALHO ---
 st.markdown("<p style='color: #38bdf8; font-weight: 600; letter-spacing: 2px; font-size: 14px; margin-bottom: 0px;'>STUDIO 11 SOUND INTELLIGENCE</p>", unsafe_allow_html=True)
 st.title("Taxonomia Universal & DNA Musical")
-st.markdown("<p style='color: #9ca3af; font-size: 16px;'>Motor analítico integrado com 100% do ecossistema global, regional e brasileiro de gêneros e subgêneros.</p>", unsafe_allow_html=True)
+st.markdown("<p style='color: #9ca3af; font-size: 16px;'>Motor analítico integrado com o ecossistema global e brasileiro de gêneros e subgêneros.</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.image("https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=300&auto=format&fit=crop", use_container_width=True)
+    st.image("https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=300&auto=format&fit=crop", width="stretch")
     st.markdown("### Painel de Controle")
     uploaded_file = st.file_uploader("Enviar Arquivo (.mp3 / .wav)", type=["mp3", "wav"])
     st.markdown("---")
-    st.markdown("### Matriz Coberta (100%)")
-    st.markdown("<small style='color: #9ca3af;'>✓ Clássica, Ópera & Coral<br>✓ Rock, Metal & Vertentes<br>✓ Pop, K-J-C Pop & Hyperpop<br>✓ EDM, Phonk, Trap & Dubstep<br>✓ Hip-Hop, Drill & Lo-fi<br>✓ Jazz, Blues, Soul & R&B<br>✓ Reggae, Dub & Dancehall<br>✓ Gospel & Música Latina<br>✓ **Brasileira (Funk, Sertanejo, Forró, MPB, Bossa, Axé, Pisadinha, etc.)**<br>✓ Africana, Indiana & Asiática<br>✓ Instrumental & Trilhas</small>", unsafe_allow_html=True)
+    st.markdown("### Matriz Coberta")
+    st.markdown("<small style='color: #9ca3af;'>✓ Clássica, Ópera & Coral<br>✓ Rock, Metal & Vertentes<br>✓ Pop, K-J-C Pop & Hyperpop<br>✓ EDM, Phonk, Trap & Dubstep<br>✓ Hip-Hop, Drill & Lo-fi<br>✓ Jazz, Blues, Soul & R&B<br>✓ Reggae, Dub & Dancehall<br>✓ Gospel & Música Latina<br>✓ **Brasileira (Funk, Sertanejo, Forró, MPB, Bossa, etc.)**<br>✓ Africana, Indiana & Asiática<br>✓ Instrumental & Trilhas</small>", unsafe_allow_html=True)
 
 # --- PROCESSAMENTO PRINCIPAL ---
 if uploaded_file is not None:
@@ -197,86 +100,93 @@ if uploaded_file is not None:
 
     with col_info:
         st.markdown("### 🧬 Pipeline Universal")
-        with st.spinner("Processando DSP e mapeando na árvore taxonômica completa..."):
+        with st.spinner("Processando DSP e mapeando na árvore taxonômica..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp_file:
                 tmp_file.write(uploaded_file.getvalue())
                 tmp_file_path = tmp_file.name
 
             try:
+                # Tratamento de erro seguro caso o MP3 esteja corrompido
                 y, sr = librosa.load(tmp_file_path, sr=None)
+                
+                # Extração DSP
+                tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
+                if isinstance(tempo, np.ndarray):
+                    tempo = tempo[0]
+                    
+                duration = librosa.get_duration(y=y, sr=sr)
+                rms = np.mean(librosa.feature.rms(y=y))
+                spectral_centroid = np.mean(librosa.feature.spectral_centroid(y=y, sr=sr))
+                
+                macro_genre, sub_genre = classify_universal_taxonomy(tempo, spectral_centroid, rms)
+                analysis_success = True
+            except Exception as e:
+                analysis_success = False
+                error_message = str(e)
             finally:
                 if os.path.exists(tmp_file_path):
                     os.remove(tmp_file_path)
+
+        if not analysis_success:
+            st.error(f"Erro ao processar o arquivo de áudio. O formato pode estar corrompido ou incompatível. Detalhe: {error_message}")
+        else:
+            st.info("Classificação universal concluída com sucesso.")
+
+            st.markdown("---")
+
+            # --- CARDS DE TAXONOMIA ---
+            st.markdown("### 🎯 Perfil Taxonômico Detalhado")
             
-            # Extração DSP
-            tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-            if isinstance(tempo, np.ndarray):
-                tempo = tempo[0]
-                
-            duration = librosa.get_duration(y=y, sr=sr)
-            rms = np.mean(librosa.feature.rms(y=y))
-            spectral_centroid = np.mean(librosa.feature.spectral_centroid(y=y, sr=sr))
+            g1, g2, g3 = st.columns(3)
+            with g1:
+                st.markdown(f"""
+                    <div class='metric-card'>
+                        <div class='metric-value' style='color: #34d399;'>{macro_genre}</div>
+                        <div class='metric-label'>Macro Gênero Principal</div>
+                    </div>
+                """, unsafe_allow_html=True)
+            with g2:
+                st.markdown(f"""
+                    <div class='metric-card'>
+                        <div class='metric-value' style='color: #f472b6;'>{sub_genre}</div>
+                        <div class='metric-label'>Subgênero / Vertente Atribuída</div>
+                    </div>
+                """, unsafe_allow_html=True)
+            with g3:
+                st.markdown(f"""
+                    <div class='metric-card'>
+                        <div class='metric-value'>{tempo:.1f} BPM</div>
+                        <div class='metric-label'>Andamento (BPM)</div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown("---")
+
+            # Métricas Técnicas
+            m1, m2, m3 = st.columns(3)
+            with m1:
+                minutes, seconds = int(duration // 60), int(duration % 60)
+                st.markdown(f"<div class='metric-card'><div class='metric-value'>{minutes}:{seconds:02d}</div><div class='metric-label'>Duração Total</div></div>", unsafe_allow_html=True)
+            with m2:
+                st.markdown(f"<div class='metric-card'><div class='metric-value'>{rms:.4f}</div><div class='metric-label'>Energia RMS</div></div>", unsafe_allow_html=True)
+            with m3:
+                st.markdown(f"<div class='metric-card'><div class='metric-value'>{spectral_centroid:.0f} Hz</div><div class='metric-label'>Centroide Espectral</div></div>", unsafe_allow_html=True)
+
+            st.markdown("---")
+
+            # Espectrograma
+            st.markdown("### 🔬 Espectrograma de Frequência")
+            fig, ax = plt.subplots(figsize=(12, 3.5))
+            fig.patch.set_facecolor('#111827')
+            ax.set_facecolor('#0b0f19')
             
-            # Classificação na base completa
-            macro_genre, sub_genre = classify_universal_taxonomy(tempo, spectral_centroid, rms)
-
-        st.info("Classificação universal concluída com sucesso.")
-
-    st.markdown("---")
-
-    # --- CARDS DE TAXONOMIA ---
-    st.markdown("### 🎯 Perfil Taxonômico Detalhado")
-    
-    g1, g2, g3 = st.columns(3)
-    with g1:
-        st.markdown(f"""
-            <div class='metric-card'>
-                <div class='metric-value' style='color: #34d399;'>{macro_genre}</div>
-                <div class='metric-label'>Macro Gênero Principal</div>
-            </div>
-        """, unsafe_allow_html=True)
-    with g2:
-        st.markdown(f"""
-            <div class='metric-card'>
-                <div class='metric-value' style='color: #f472b6;'>{sub_genre}</div>
-                <div class='metric-label'>Subgênero / Vertente Atribuída</div>
-            </div>
-        """, unsafe_allow_html=True)
-    with g3:
-        st.markdown(f"""
-            <div class='metric-card'>
-                <div class='metric-value'>{tempo:.1f} BPM</div>
-                <div class='metric-label'>Andamento (BPM)</div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("---")
-
-    # Métricas Técnicas
-    m1, m2, m3 = st.columns(3)
-    with m1:
-        minutes, seconds = int(duration // 60), int(duration % 60)
-        st.markdown(f"<div class='metric-card'><div class='metric-value'>{minutes}:{seconds:02d}</div><div class='metric-label'>Duração Total</div></div>", unsafe_allow_html=True)
-    with m2:
-        st.markdown(f"<div class='metric-card'><div class='metric-value'>{rms:.4f}</div><div class='metric-label'>Energia RMS</div></div>", unsafe_allow_html=True)
-    with m3:
-        st.markdown(f"<div class='metric-card'><div class='metric-value'>{spectral_centroid:.0f} Hz</div><div class='metric-label'>Centroide Espectral</div></div>", unsafe_allow_html=True)
-
-    st.markdown("---")
-
-    # Espectrograma
-    st.markdown("### 🔬 Espectrograma de Frequência")
-    fig, ax = plt.subplots(figsize=(12, 3.5))
-    fig.patch.set_facecolor('#111827')
-    ax.set_facecolor('#0b0f19')
-    
-    D = librosa.amplitude_to_db(np.abs(librosa.stft(y)), ref=np.max)
-    img = librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='log', ax=ax, cmap='coolwarm')
-    ax.tick_params(colors='#9ca3af', which='both')
-    
-    cbar = fig.colorbar(img, ax=ax, format='%+2.0f dB')
-    plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color='#9ca3af')
-    st.pyplot(fig)
+            D = librosa.amplitude_to_db(np.abs(librosa.stft(y)), ref=np.max)
+            img = librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='log', ax=ax, cmap='coolwarm')
+            ax.tick_params(colors='#9ca3af', which='both')
+            
+            cbar = fig.colorbar(img, ax=ax, format='%+2.0f dB')
+            plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color='#9ca3af')
+            st.pyplot(fig)
 
 else:
     st.markdown("""
