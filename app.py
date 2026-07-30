@@ -34,7 +34,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- MOTOR DE CLASSIFICAÇÃO COM VETOR DE DNA MULTIDIMENSIONAL ---
+# --- MOTOR DE CLASSIFICÇÃO COM VETOR DE DNA MULTIDIMENSIONAL (RECALIBRADO) ---
 def classify_with_dna(tempo, centroid, rms):
     # Derivando métricas de DNA a partir do DSP extraído do áudio
     energia = int(min(100, max(5, rms * 600)))
@@ -57,10 +57,11 @@ def classify_with_dna(tempo, centroid, rms):
         "Atmosfera": atmosfera
     }
 
-    # Regras de Decisão Taxonômica baseadas no DNA e DSP unificados
-    if peso < 40 and agressiv < 35 and dancabilidade > 50 and centroid < 2900:
+    # 1. REGRA DE OURO PARA REGGAE (intercepta mesmo se o BPM for estimado alto, avaliando peso leve e atmosfera)
+    if peso < 50 and agressiv < 40 and atmosfera > 50:
         macro, sub = "Reggae", "Roots Reggae / Dub / Reggae Brasileiro"
-    elif energia > 75 and agressiv > 60 and peso > 60:
+    # 2. Funk / Eletrônica pesada (exige agressividade e peso reais)
+    elif energia > 75 and agressiv > 55 and peso > 50:
         if tempo >= 145 or centroid > 2300:
             macro, sub = "Música Brasileira", "Funk Brasileiro -> Funk 150 BPM / Mandelão"
         else:
@@ -71,7 +72,7 @@ def classify_with_dna(tempo, centroid, rms):
         macro, sub = "Música Brasileira", "Forró -> Forró Pé de Serra / Xote / Baião"
     elif tempo < 85 and centroid < 1500:
         macro, sub = "Música Brasileira", "MPB -> Bossa Nova / Choro"
-    elif centroid > 2200 and energia > 70:
+    elif centroid > 2200 and energia > 70 and agressiv > 40:
         macro, sub = "Música Eletrônica (EDM)", "House / Tech House / Progressive"
     elif 70 <= tempo <= 105 and centroid > 1600:
         macro, sub = "Hip-Hop / Rap", "Trap / Drill / Boom Bap"
